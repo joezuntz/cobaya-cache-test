@@ -24,11 +24,12 @@ jobs:
       - if: ${{ steps.cache-cobaya.outputs.cache-hit != 'true' }}
         name: Download cobaya installables
         run:  |
-          #export COBAYA_PACKAGES_PATH=$PWD/cobaya-data
+          export COBAYA_PACKAGES_PATH=$PWD/cobaya-data
           pip install cobaya planck-2020-lollipop planck-2020-hillipop
           cobaya-install planck_2020_lollipop.lowlEB
           cobaya-install planck_2020_hillipop.TT
           # check that this works the first time
+          python -c 'import cobaya'
           python -c 'from planck_2020_lollipop import lowlEB;lowlEB()'
 
       - name: Show cobaya content
