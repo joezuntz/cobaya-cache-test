@@ -28,6 +28,8 @@ jobs:
           pip install cobaya planck-2020-lollipop planck-2020-hillipop
           cobaya-install planck_2020_lollipop.lowlEB
           cobaya-install planck_2020_hillipop.TT
+          # check that this works the first time
+          python -c 'from planck_2020_lollipop import lowlEB;lowlEB()'
 
       - name: Show cobaya content
         id: cache-npipe-show
