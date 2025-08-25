@@ -1,0 +1,71 @@
+name: Continuous Integration
+
+on:
+  workflow_dispatch:
+
+
+jobs:
+
+  Download_and_cache:
+    name: Download and cache data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache cobaya installables
+        id: cache-cobaya
+        uses: actions/cache@v4
+        with:
+          path: ./cobaya-data
+          key: cobaya-installs-v1
+          enableCrossOsArchive: true
+          
+      - if: ${{ steps.cache-cobaya.outputs.cache-hit != 'true' }}
+        name: Download cobaya installables
+        run:  |
+          export COBAYA_PACKAGES_PATH=$PWD/cobaya-data
+          pip install cobaya planck-2020-lollipop planck-2020-hillipop
+          cobaya-install planck_2020_lollipop.lowlEB
+          cobaya-install planck_2020_hillipop.TT
+
+      - name: Show cobaya content
+        id: cache-npipe-show
+        run: |
+          export COBAYA_PACKAGES_PATH=$PWD/cobaya-data
+          ls -lR ${COBAYA_PACKAGES_PATH}
+
+
+
+
+  conda_test:
+    name: Run Test
+    needs: Download_and_cache
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        pyversion: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get Cached Cobaya
+        uses: actions/cache/restore@v3
+        with:
+          path: ./cobaya-data
+          key: cobaya-installs-v1
+          fail-on-cache-miss: true
+
+      - name: Show cobaya content
+        run: |
+          export COBAYA_PACKAGES_PATH=$PWD/cobaya-data
+          ls -lR ${COBAYA_PACKAGES_PATH}
+
+      - name: Install cobaya and test data is present
+        run: |
+          export COBAYA_PACKAGES_PATH=$PWD/cobaya-data
+          pip install cobaya planck-2020-lollipop planck-2020-hillipop
+          cobaya-install --test planck_2020_lollipop.lowlEB
+          cobaya-install --test planck_2020_hillipop.TT
